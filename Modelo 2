@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Modelo Virtual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(to right, #3A7BD5, #00d2ff);
+            --button-gradient: linear-gradient(to right, #6a11cb, #2575fc); /* Morado a azul eléctrico */
+            --button-text-color: #ffffff;
+            --background-color: #f0f2f5;
+            --card-background: #ffffff;
+            --text-color-dark: #333;
+            --text-color-light: #fff;
+            --border-radius: 15px;
+            --chip-background: #e0e0e0;
+            --chip-selected-background: #3A7BD5;
+            --chip-text-color: #333;
+            --chip-selected-text-color: #fff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: var(--text-color-dark);
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+            padding: 20px 0;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Pantalla Inicial */
+        .initial-screen {
+            background: var(--primary-gradient);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color-light);
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: 600;
+            opacity: 0;
+            animation: fadeIn 1s forwards ease-out;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Contenido Principal */
+        .main-content {
+            display: none; /* Se mostrará después de la pantalla inicial */
+            flex-grow: 1;
+            padding-bottom: 70px; /* Espacio para la barra de navegación inferior */
+        }
+
+        .tab-content {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .tab-content h2 {
+            font-family: 'Roboto', sans-serif;
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: var(--text-color-dark);
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        /* Estilos Predefinidos (Chips) */
+        .style-chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+
+        .style-chip {
+            background-color: var(--chip-background);
+            color: var(--chip-text-color);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+            font-family: 'Roboto', sans-serif;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .style-chip:hover {
+            background-color: #d0d0d0;
+        }
+
+        .style-chip.selected {
+            background: var(--primary-gradient);
+            color: var(--chip-selected-text-color);
+            border-color: #b3e0ff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Campo de Descripción */
+        .description-field label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .description-field textarea {
+            width: calc(100% - 20px);
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-family: 'Roboto', sans-serif;
+            font-size: 1em;
+            min-height: 100px;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+            margin-bottom: 25px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .description-field textarea:focus {
+            outline: none;
+            border-color: #3A7BD5;
+            box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.2);
+        }
+
+        /* Botón Generar Imagen */
+        .generate-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 30px;
+            background: var(--button-gradient);
+            color: var(--button-text-color);
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            width: fit-content;
+            margin: 0 auto;
+            text-decoration: none; /* Asegura que no tenga subrayado si es un <a> */
+        }
+
+        .generate-button i {
+            margin-right: 10px;
+            font-size: 1.4em;
+        }
+
+        .generate-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .generate-button.loading {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .generate-button.loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Barra de Navegación Inferior */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--card-background);
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: color 0.3s ease;
+            padding: 5px 10px;
+            border-radius: var(--border-radius);
+        }
+
+        .nav-item i {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .nav-item.active {
+            color: #3A7BD5;
+            background-color: rgba(58, 123, 213, 0.1);
+        }
+
+        .nav-item:hover {
+            color: #555;
+        }
+
+        /* Galería */
+        #gallery-tab {
+            display: none; /* Inicialmente oculta */
+            min-height: 300px; /* Asegura que la galería tenga una altura mínima */
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #777;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        .gallery-item {
+            width: 100%;
+            padding-bottom: 100%; /* Para hacer las miniaturas cuadradas */
+            position: relative;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .gallery-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+        }
+
+        .no-images-message {
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: #999;
+        }
+
+        /* Modal para imagen en pantalla completa */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: var(--border-radius);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-actions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+
+        .modal-action-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-action-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Media Queries para Responsividad */
+        @media (max-width: 768px) {
+            .initial-screen {
+                font-size: 1.8em;
+            }
+
+            .container {
+                max-width: 95%;
+            }
+
+            .tab-content {
+                padding: 20px;
+            }
+
+            .tab-content h2 {
+                font-size: 1.5em;
+            }
+
+            .style-chip {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+
+            .generate-button {
+                font-size: 1.1em;
+                padding: 12px 25px;
+            }
+
+            .generate-button i {
+                font-size: 1.2em;
+            }
+
+            .nav-item {
+                font-size: 0.8em;
+            }
+
+            .nav-item i {
+                font-size: 1.3em;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .initial-screen {
+                font-size: 1.5em;
+            }
+
+            .tab-content {
+                padding: 15px;
+            }
+
+            .tab-content h2 {
+                font-size: 1.3em;
+            }
+
+            .style-chip {
+                padding: 7px 12px;
+                font-size: 0.85em;
+            }
+
+            .description-field textarea {
+                min-height: 80px;
+            }
+
+            .generate-button {
+                font-size: 1em;
+                padding: 10px 20px;
+            }
+
+            .generate-button i {
+                font-size: 1.1em;
+            }
+
+            .nav-item {
+                font-size: 0.75em;
+            }
+
+            .nav-item i {
+                font-size: 1.2em;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="initial-screen" id="initialScreen">
+        Generador de Modelo Virtual
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <div id="generator-tab" class="tab-content active-tab">
+                <h2>Crea tu modelo virtual</h2>
+
+                <div class="style-selection">
+                    <label style="display: block; text-align: center; margin-bottom: 15px; font-weight: 500; font-size: 1.1em;">Selecciona un estilo:</label>
+                    <div class="style-chips-container">
+                        <div class="style-chip" data-style="Casual">🧢 Casual</div>
+                        <div class="style-chip" data-style="Elegant">👗 Elegant</div>
+                        <div class="style-chip" data-style="Sporty">🏃 Sporty</div>
+                        <div class="style-chip" data-style="Artistic">🎨 Artistic</div>
+                        <div class="style-chip" data-style="Beach">🏖️ Beach</div>
+                        <div class="style-chip" data-style="Business">💼 Business</div>
+                    </div>
+                </div>
+
+                <div class="description-field">
+                    <label for="description">Agrega una descripción opcional (peinado, accesorios, fondo, etc.)</label>
+                    <textarea id="description" placeholder="Ej: cabello largo y rubio, gafas de sol, con un fondo de playa al atardecer." maxlength="200"></textarea>
+                </div>
+
+                <button class="generate-button" id="generateButton">
+                    <i class="fas fa-magic"></i> ✨ Generar Imagen
+                </button>
+            </div>
+
+            <div id="gallery-tab" class="tab-content">
+                <h2>Tus imágenes generadas</h2>
+                <div class="gallery-grid" id="galleryGrid">
+                    <p class="no-images-message" id="noImagesMessage">Aún no has generado ninguna imagen. ¡Crea una ahora!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="#generator" class="nav-item active" id="navGenerator">
+            <i class="fas fa-palette"></i>
+            <span>Generador</span>
+        </a>
+        <a href="#gallery" class="nav-item" id="navGallery">
+            <i class="fas fa-images"></i>
+            <span>Galería</span>
+        </a>
+    </div>
+
+    <div id="imageModal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div class="modal-actions">
+            <button class="modal-action-button" id="shareButton"><i class="fas fa-share-alt"></i> Compartir</button>
+            <button class="modal-action-button" id="saveButton"><i class="fas fa-download"></i> Guardar</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialScreen = document.getElementById('initialScreen');
+            const mainContent = document.getElementById('mainContent');
+            const generatorTab = document.getElementById('generator-tab');
+            const galleryTab = document.getElementById('gallery-tab');
+            const navGenerator = document.getElementById('navGenerator');
+            const navGallery = document.getElementById('navGallery');
+            const styleChips = document.querySelectorAll('.style-chip');
+            const generateButton = document.getElementById('generateButton');
+            const galleryGrid = document.getElementById('galleryGrid');
+            const noImagesMessage = document.getElementById('noImagesMessage');
+            const imageModal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const closeModal = document.querySelector('.close-modal');
+            const shareButton = document.getElementById('shareButton');
+            const saveButton = document.getElementById('saveButton');
+            const descriptionInput = document.getElementById('description');
+
+            let selectedStyle = '';
+            let generatedImages = JSON.parse(localStorage.getItem('generatedImages')) || [];
+
+            // Mostrar pantalla inicial y luego contenido principal
+            setTimeout(() => {
+                initialScreen.style.display = 'none';
+                mainContent.style.display = 'flex';
+                updateGalleryDisplay(); // Cargar imágenes al iniciar
+            }, 2000); // Duración de la animación inicial
+
+            // Manejar la selección de estilo
+            styleChips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    styleChips.forEach(c => c.classList.remove('selected'));
+                    chip.classList.add('selected');
+                    selectedStyle = chip.dataset.style;
+                });
+            });
+
+            // Manejar el botón de Generar Imagen
+            generateButton.addEventListener('click', () => {
+                generateButton.classList.add('loading');
+                generateButton.innerHTML = '<i class="fas fa-spinner"></i> Generando...';
+                generateButton.disabled = true;
+
+                // Simular una llamada a la API o un proceso de generación
+                setTimeout(() => {
+                    const imageUrl = `https://via.placeholder.com/250?text=Modelo+${selectedStyle || 'Personalizado'}`; // URL de imagen de placeholder
+                    const descriptionText = descriptionInput.value.trim();
+                    const imageInfo = {
+                        id: Date.now(),
+                        src: imageUrl,
+                        style: selectedStyle,
+                        description: descriptionText
+                    };
+
+                    generatedImages.unshift(imageInfo); // Añadir al principio
+                    localStorage.setItem('generatedImages', JSON.stringify(generatedImages));
+
+                    generateButton.classList.remove('loading');
+                    generateButton.innerHTML = '<i class="fas fa-magic"></i> ✨ Generar Imagen';
+                    generateButton.disabled = false;
+
+                    // Limpiar selección y descripción después de generar
+                    styleChips.forEach(c => c.classList.remove('selected'));
+                    selectedStyle = '';
+                    descriptionInput.value = '';
+
+                    // Cambiar a la pestaña de Galería después de generar
+                    switchTab('gallery');
+                    updateGalleryDisplay();
+                }, 2500); // Simula 2.5 segundos de carga
+            });
+
+            // Manejar cambio de pestañas
+            navGenerator.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchTab('generator');
+            });
+
+            navGallery.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchTab('gallery');
+            });
+
+            function switchTab(tabName) {
+                if (tabName === 'generator') {
+                    generatorTab.style.display = 'block';
+                    galleryTab.style.display = 'none';
+                    navGenerator.classList.add('active');
+                    navGallery.classList.remove('active');
+                } else if (tabName === 'gallery') {
+                    generatorTab.style.display = 'none';
+                    galleryTab.style.display = 'block';
+                    navGenerator.classList.remove('active');
+                    navGallery.classList.add('active');
+                    updateGalleryDisplay(); // Asegura que la galería esté actualizada
+                }
+            }
+
+            // Actualizar la visualización de la galería
+            function updateGalleryDisplay() {
+                galleryGrid.innerHTML = ''; // Limpiar la cuadrícula
+                if (generatedImages.length === 0) {
+                    noImagesMessage.style.display = 'block';
+                } else {
+                    noImagesMessage.style.display = 'none';
+                    generatedImages.forEach(image => {
+                        const galleryItem = document.createElement('div');
+                        galleryItem.classList.add('gallery-item');
+                        galleryItem.innerHTML = `<img src="${image.src}" alt="Modelo ${image.style || 'generado'}">`;
+                        galleryItem.addEventListener('click', () => openImageModal(image.src));
+                        galleryGrid.appendChild(galleryItem);
+                    });
+                }
+            }
+
+            // Abrir y cerrar el modal de imagen
+            function openImageModal(imageUrl) {
+                modalImage.src = imageUrl;
+                imageModal.style.display = 'flex';
+                currentImageForActions = imageUrl; // Guardar la URL para compartir/guardar
+            }
+
+            closeModal.addEventListener('click', () => {
+                imageModal.style.display = 'none';
+            });
+
+            imageModal.addEventListener('click', (e) => {
+                if (e.target === imageModal) {
+                    imageModal.style.display = 'none';
+                }
+            });
+
+            // Funcionalidad de Compartir (Web Share API)
+            let currentImageForActions = ''; // Variable para almacenar la URL de la imagen actual del modal
+
+            shareButton.addEventListener('click', async () => {
+                if (navigator.share && currentImageForActions) {
+                    try {
+                        const response = await fetch(currentImageForActions);
+                        const blob = await response.blob();
+                        const file = new File([blob], 'modelo_virtual.png', { type: 'image/png' });
+
+                        await navigator.share({
+                            files: [file],
+                            title: 'Mi Modelo Virtual Generado',
+                            text: '¡Mira el modelo que generé con esta increíble app!',
+                        });
+                        console.log('Contenido compartido con éxito');
+                    } catch (error) {
+                        console.error('Error al compartir:', error);
+                        alert('No se pudo compartir la imagen. Tu navegador puede no soportar esta función o hubo un error.');
+                    }
+                } else {
+                    alert('La función de compartir no está disponible en este navegador.');
+                }
+            });
+
+            // Funcionalidad de Guardar imagen
+            saveButton.addEventListener('click', () => {
+                if (currentImageForActions) {
+                    const link = document.createElement('a');
+                    link.href = currentImageForActions;
+                    link.download = `modelo_virtual_${Date.now()}.png`; // Nombre de archivo sugerido
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    alert('Imagen guardada en tus descargas.');
+                }
+            });
+
+            updateGalleryDisplay(); // Llamar al inicio para mostrar imágenes guardadas si las hay
+        });
+    </script>
+</body>
+</html>
